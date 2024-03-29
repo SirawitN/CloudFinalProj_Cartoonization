@@ -8,3 +8,5 @@ Pretrained_models/*
 
 #  Images
 test_images/*
+
+__pycache__/*
