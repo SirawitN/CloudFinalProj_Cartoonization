@@ -1,4 +1,4 @@
-import sys
+import logging
 import torch, os
 import numpy as np
 from PIL import Image
@@ -6,16 +6,25 @@ from model import Transformer
 import torchvision.utils as vutils
 import torchvision.transforms as transforms
 
-sys.path.append("../")
+MODEL_FILE_NAME = "hayao_model.pth"
+LOAD_SIZE = 756
 
-style = "Hayao"
-load_size = 756
-input_dir = "test_images"
-output_dir = "cartoonized_images"
+logger = logging.getLogger(__name__)
 
-model = Transformer()
-model.load_state_dict(torch.load(os.path.join("pretrained_models", style + '_net_G_float.pth')))
-model.eval()
+def model_fn(model_dir):
+    logger.info('Loading the model.')
+	
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model_path = os.path.join(model_dir, MODEL_FILE_NAME)
+	
+    model = Transformer()
+    with open(model_path, 'rb') as f:
+        model.load_state_dict(torch.load(f))
+
+    model.to(device).eval()
+    logger.info('Done loading model.')
+    return model
+
 
 
 for files in os.listdir(input_dir):
