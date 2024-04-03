@@ -1,3 +1,4 @@
+import io
 import base64
 import logging
 import numpy as np
@@ -31,10 +32,11 @@ def model_fn(model_dir):
 def input_fn(request_body, request_content_type):
     logger.info('Receiving input.')
     if request_content_type == 'application/json':
+        logger.info(f'request_body : {request_body}')
         data = json.loads(request_body)
         # input_tensor = torch.tensor(data)
-        logger.info('Passed input')
-        return data
+        logger.info(f"Passed input : {data['body']}")
+        return data['body']
     else:
         logger.exception(f"Unsupported content type: {request_content_type}")
         # raise ValueError(f"Unsupported content type: {request_content_type}")
@@ -44,18 +46,18 @@ def predict_fn(input_data, model):
 	
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 	
-    aux_path = '/tmp/tmp.png'
-    with open(aux_path, "wb") as f:
-        f.write(base64.b64decode(input_data))
-        f.close()
-    input_image = Image.open(aux_path).convert("RGB")
+    logger.info(f"input : {input_data}")
+    imgdata = base64.b64decode(input_data)
+    logger.info(f"input2 : {imgdata}")
+    input_image = Image.open(io.BytesIO(imgdata)).convert("RGB")
+    logger.info('Complete base64 to img.')
     
-    ext = os.path.splitext(input_data)[1]
-    if ext not in ['.jpg', '.png']:
-        logger.exception('Invalid input type.')
-        return None
+    # ext = os.path.splitext(input_data)[1]
+    # if ext not in ['.jpg', '.png']:
+    #     logger.exception('Invalid input type.')
+    #     return None
+    # logger.info('Valid datatype')
 
-    logger.info('Valid datatype')
     # resize image, keep aspect ratio
     h = input_image.size[0]
     w = input_image.size[1]
@@ -90,17 +92,22 @@ def predict_fn(input_data, model):
     return output_image
 
 def output_fn(prediction, response_content_type):
-    logger.info('Generating output.')
+    logger.info(f'Generating output.')
     if response_content_type == 'application/json':
-        transform = transforms.ToPILImage()
+        transform = transforms.ToPILImage("RGB")
         pil_image = transform(prediction)
 
-        # Convert the PIL image to bytes
-        image_bytes = pil_image.tobytes()
+        # Create in-memory file from the PIL image
+        in_mem_file = io.BytesIO()
+        pil_image.save(in_mem_file, format = "PNG")
+
+        # Read the bytes
+        in_mem_file.seek(0)
+        image_bytes = in_mem_file.read()
 
         # Encode the bytes to base64
         base64_string = base64.b64encode(image_bytes).decode("utf-8")
-        logger.info('Output generated')
+        logger.info(f'Output generated')
         return base64_string
     else:
         logger.exception(f"Unsupported content type: {response_content_type}")
