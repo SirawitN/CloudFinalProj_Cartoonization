@@ -1,11 +1,11 @@
 import io
+import imghdr
 import base64
 import logging
 import numpy as np
 from PIL import Image
 import torch, os, json
 from model import Transformer
-# import torchvision.utils as vutils
 import torchvision.transforms as transforms
 
 MODEL_FILE_NAME = "hayao_model.pth"
@@ -32,11 +32,16 @@ def model_fn(model_dir):
 def input_fn(request_body, request_content_type):
     logger.info('Receiving input.')
     if request_content_type == 'application/json':
-        logger.info(f'request_body : {request_body}')
-        data = json.loads(request_body)
-        # input_tensor = torch.tensor(data)
-        logger.info(f"Passed input : {data['body']}")
-        return data['body']
+        data = json.loads(request_body)['body']
+
+        # Check the extension
+        decoded_data = base64.b64decode(data)
+        extension = imghdr.what(None, h=decoded_data)
+        if extension not in ['jpg', 'png', 'jpeg']:
+            logger.error('Invalid input type.')
+            return None
+        
+        return decoded_data
     else:
         logger.exception(f"Unsupported content type: {request_content_type}")
         # raise ValueError(f"Unsupported content type: {request_content_type}")
@@ -46,17 +51,8 @@ def predict_fn(input_data, model):
 	
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 	
-    logger.info(f"input : {input_data}")
-    imgdata = base64.b64decode(input_data)
-    logger.info(f"input2 : {imgdata}")
-    input_image = Image.open(io.BytesIO(imgdata)).convert("RGB")
+    input_image = Image.open(io.BytesIO(input_data)).convert("RGB")
     logger.info('Complete base64 to img.')
-    
-    # ext = os.path.splitext(input_data)[1]
-    # if ext not in ['.jpg', '.png']:
-    #     logger.exception('Invalid input type.')
-    #     return None
-    # logger.info('Valid datatype')
 
     # resize image, keep aspect ratio
     h = input_image.size[0]
