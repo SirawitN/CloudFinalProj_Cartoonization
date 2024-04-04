@@ -9,10 +9,8 @@ from model import Transformer
 import torchvision.transforms as transforms
 
 MODEL_FILE_NAME = "hayao_model.pth"
-# LOAD_SIZE = 756
 
 logger = logging.getLogger(__name__)
-
 
 def model_fn(model_dir):
     logger.info('Loading the model.')
@@ -60,17 +58,6 @@ def predict_fn(input_data, model):
     input_image = Image.open(io.BytesIO(input_image)).convert("RGB")
     logger.info('Complete base64 to img.')
 
-    # resize image, keep aspect ratio
-    # h = input_image.size[0]
-    # w = input_image.size[1]
-    # ratio = h *1.0 / w
-    # if ratio > 1:
-    #     h = LOAD_SIZE
-    #     w = int(h*1.0/ratio)
-    # else:
-    #     w = LOAD_SIZE
-    #     h = int(w * ratio)
-    # input_image = input_image.resize((h, w), Image.BICUBIC)
     input_image = np.asarray(input_image)
 
     # RGB -> BGR
