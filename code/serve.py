@@ -9,7 +9,7 @@ from model import Transformer
 import torchvision.transforms as transforms
 
 MODEL_FILE_NAME = "hayao_model.pth"
-LOAD_SIZE = 756
+# LOAD_SIZE = 756
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,11 @@ def input_fn(request_body, request_content_type):
             logger.error('Invalid input type.')
             return None
         
-        return decoded_data
+        input_data = {
+            "data": decoded_data,
+            "extension": extension
+        }
+        return input_data
     else:
         logger.exception(f"Unsupported content type: {request_content_type}")
         # raise ValueError(f"Unsupported content type: {request_content_type}")
@@ -50,21 +54,23 @@ def predict_fn(input_data, model):
     logger.info('Generating cartoonization.')
 	
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    input_image = input_data["data"]
 	
-    input_image = Image.open(io.BytesIO(input_data)).convert("RGB")
+    input_image = Image.open(io.BytesIO(input_image)).convert("RGB")
     logger.info('Complete base64 to img.')
 
     # resize image, keep aspect ratio
-    h = input_image.size[0]
-    w = input_image.size[1]
-    ratio = h *1.0 / w
-    if ratio > 1:
-        h = LOAD_SIZE
-        w = int(h*1.0/ratio)
-    else:
-        w = LOAD_SIZE
-        h = int(w * ratio)
-    input_image = input_image.resize((h, w), Image.BICUBIC)
+    # h = input_image.size[0]
+    # w = input_image.size[1]
+    # ratio = h *1.0 / w
+    # if ratio > 1:
+    #     h = LOAD_SIZE
+    #     w = int(h*1.0/ratio)
+    # else:
+    #     w = LOAD_SIZE
+    #     h = int(w * ratio)
+    # input_image = input_image.resize((h, w), Image.BICUBIC)
     input_image = np.asarray(input_image)
 
     # RGB -> BGR
@@ -85,17 +91,25 @@ def predict_fn(input_data, model):
     output_image = output_image.data.cpu().float() * 0.5 + 0.5
 
     logger.info('Complete prediction')
-    return output_image
+   
+    prediction = {
+        "output_image": output_image,
+        "extension": input_data["extension"]
+    }
+    return prediction
 
 def output_fn(prediction, response_content_type):
     logger.info(f'Generating output.')
     if response_content_type == 'application/json':
+        output_image = prediction["output_image"]
+        extension = prediction["extension"]
+
         transform = transforms.ToPILImage("RGB")
-        pil_image = transform(prediction)
+        pil_image = transform(output_image)
 
         # Create in-memory file from the PIL image
         in_mem_file = io.BytesIO()
-        pil_image.save(in_mem_file, format = "PNG")
+        pil_image.save(in_mem_file, format = extension)
 
         # Read the bytes
         in_mem_file.seek(0)
