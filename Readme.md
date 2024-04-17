@@ -39,7 +39,7 @@
 1. Download `code/lambda_function.py` file from this repository to your local computer
 2. Create an IAM role with the following permissions policies
     - [AmazonSageMakerFullAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonSageMakerFullAccess.html)
-3. Create a Lambda function with the source code in the `lambda_function.py` using the created IAM role from the 2<sup>nd</sup> step
+3. Create a Lambda function with the source code in the `lambda_function.py` using the created IAM role from the <b>2<sup>nd</sup></b> step
     - Runtime: Python 3.10
 	- Architecture: x86_64
     - No trigger and destination
