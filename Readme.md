@@ -15,10 +15,10 @@
 ### Instructions
 #### Amazon SageMaker Setup
 1. Download files from this repository to your local computer to initialize the CartoonGAN model
-    - `hayao_model.pth`
+    - `code/hayao_model.pth`
+    - `code/serve.py`
+    - `code/model.py`
     - `cartoonify.ipynb`
-    - `serve.py`
-    - `model.py`
 2. Create an IAM role with the following permissions policies in your AWS account
     - [AmazonS3FullAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonS3FullAccess.html)
     - [AmazonSageMakerFullAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonSageMakerFullAccess.html)
@@ -36,7 +36,7 @@
     <img src="./resource/endpoint.png">
     </p>
 #### AWS Lambda Setup
-1. Download `lambda_function.py` file from this repository to your local computer
+1. Download `code/lambda_function.py` file from this repository to your local computer
 2. Create an IAM role with the following permissions policies
     - [AmazonSageMakerFullAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonSageMakerFullAccess.html)
 3. Create a Lambda function with the source code in the `lambda_function.py` using the created IAM role from the 2<sup>nd</sup> step
